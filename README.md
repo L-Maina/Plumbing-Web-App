@@ -17,7 +17,7 @@ Professional plumbing services in Nairobi, Kenya.
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS 4, shadcn/ui
-- **Database**: Prisma ORM with PostgreSQL
+- **Database**: Prisma ORM with PostgreSQL (production) / SQLite (local development)
 - **Animations**: Framer Motion
 - **AI Assistant**: Z.ai
 - **SMS**: Africa's Talking
@@ -29,9 +29,9 @@ Professional plumbing services in Nairobi, Kenya.
 
 - Node.js 18+
 - Bun (recommended) or npm
-- PostgreSQL database (Neon, Supabase, or Vercel Postgres)
+- PostgreSQL database (for production/Vercel)
 
-### Local Development
+### Local Development (SQLite)
 
 ```bash
 # Clone the repository
@@ -41,30 +41,38 @@ cd Plumbing-Web-App
 # Install dependencies
 bun install
 
-# Setup environment variables
-cp .env.example .env
-# Edit .env with your database URL and API keys
-
-# Initialize database
-bun run db:push
+# Setup for local development (SQLite)
+bun run db:local
 
 # Start development server
 bun run dev
 ```
 
-### Environment Variables
+### Production Setup (PostgreSQL)
 
-Copy `.env.example` to `.env` and configure:
+For Vercel deployment, you need a PostgreSQL database:
 
-```env
-# Database (PostgreSQL)
+```bash
+# Create .env with PostgreSQL URL
 DATABASE_URL="postgresql://username:password@host:5432/database?sslmode=require"
 
-# SMS notifications (Africa's Talking)
+# Setup database
+bun run db:prod
+```
+
+## Environment Variables
+
+Create a `.env` file:
+
+```env
+# Database
+DATABASE_URL="your_database_url_here"
+
+# SMS notifications (Africa's Talking) - Optional
 AFRICASTALKING_API_KEY=your_api_key
 AFRICASTALKING_USERNAME=sandbox
 
-# Email notifications (Resend)
+# Email notifications (Resend) - Optional
 RESEND_API_KEY=your_api_key
 
 # Business info
@@ -80,17 +88,12 @@ ADMIN_EMAIL=your-email@example.com
 **Option A: Neon (Recommended - Free)**
 1. Go to [neon.tech](https://neon.tech) and sign up
 2. Create a new project
-3. Copy the connection string from the dashboard
+3. Copy the connection string
 
 **Option B: Vercel Postgres**
 1. In your Vercel project, go to Storage
 2. Create a Postgres database
 3. Copy the connection string
-
-**Option C: Supabase**
-1. Go to [supabase.com](https://supabase.com) and sign up
-2. Create a new project
-3. Get the database connection string from Settings > Database
 
 ### Step 2: Deploy to Vercel
 
@@ -98,31 +101,28 @@ ADMIN_EMAIL=your-email@example.com
 2. Go to [vercel.com](https://vercel.com) and import your repository
 3. Add environment variables:
    - `DATABASE_URL` - Your PostgreSQL connection string
-   - `AFRICASTALKING_API_KEY` - (optional) For SMS notifications
-   - `AFRICASTALKING_USERNAME` - (optional) Africa's Talking username
-   - `RESEND_API_KEY` - (optional) For email notifications
    - `ADMIN_PHONE` - Your admin phone number
    - `ADMIN_EMAIL` - Your admin email
+   - `AFRICASTALKING_API_KEY` (optional) - For SMS
+   - `RESEND_API_KEY` (optional) - For email
 
 ### Step 3: Initialize Database
 
-After deployment, run the database migration:
+After deployment, the database will be automatically initialized when you first visit the site, or run:
 
 ```bash
-# Install Vercel CLI if not already installed
-npm i -g vercel
-
-# Link to your project
-vercel link
-
-# Pull environment variables
 vercel env pull .env.local
-
-# Run database push
-bun run db:push
+bun run db:prod
 ```
 
-Or use Vercel's dashboard to run commands in the deployment terminal.
+## Database Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun run db:local` | Setup SQLite for local development |
+| `bun run db:prod` | Setup PostgreSQL for production |
+| `bun run db:push` | Push schema changes to database |
+| `bun run db:generate` | Generate Prisma client |
 
 ## Admin Dashboard
 
@@ -139,9 +139,10 @@ Features:
 
 ## Important Notes
 
-- **Database**: This app requires PostgreSQL. SQLite is not supported on Vercel.
-- **AI Chat**: Uses Z.ai for intelligent customer support. Falls back to predefined responses if AI is unavailable.
-- **File Uploads**: Images are stored in the `public/uploads` folder. For production, consider using a cloud storage service like Cloudinary or AWS S3.
+- **Local Development**: Uses SQLite (file-based, no setup required)
+- **Production (Vercel)**: Requires PostgreSQL (SQLite doesn't work on serverless)
+- **AI Chat**: Uses Z.ai with fallback responses if AI is unavailable
+- **File Uploads**: Images stored in `public/uploads`. For production, consider cloud storage (Cloudinary, AWS S3)
 
 ## License
 
@@ -149,7 +150,7 @@ This project is proprietary. All rights reserved.
 
 ---
 
-**Climate Tech Plumbing & Renovators**  
-📍 Thika Rd, Nairobi, Kenya  
-📞 0720 219802  
+**Climate Tech Plumbing & Renovators**
+📍 Thika Rd, Nairobi, Kenya
+📞 0720 219802
 🌐 Available 24/7 for emergency services

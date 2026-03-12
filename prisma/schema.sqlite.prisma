@@ -1,15 +1,12 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// PRODUCTION SCHEMA (PostgreSQL for Vercel)
-// For local development with SQLite, run: bun run db:local
+// Local development schema (SQLite)
+// Use this for local development only
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -23,7 +20,7 @@ model Booking {
   time        String
   address     String
   notes       String?
-  status      String   @default("pending") // pending, confirmed, completed, cancelled
+  status      String   @default("pending")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -31,7 +28,7 @@ model Booking {
 model Review {
   id        String   @id @default(cuid())
   name      String
-  rating    Int      // 1-5
+  rating    Int
   comment   String
   service   String?
   approved  Boolean  @default(true)
@@ -43,7 +40,7 @@ model ChatMessage {
   id        String   @id @default(cuid())
   sessionId String
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sender    String   // "user", "bot", or "support"
+  sender    String
   message   String
   createdAt DateTime @default(now())
 }
@@ -51,10 +48,10 @@ model ChatMessage {
 model ChatSession {
   id              String   @id @default(cuid())
   customerName    String?
-  handoffRequested Boolean @default(false)  // AI requested handoff, waiting for admin approval
-  needsHuman      Boolean  @default(false)  // Admin approved, human should respond
-  takenOver       Boolean  @default(false)  // Human has responded
-  finished        Boolean  @default(false)  // Conversation finished by admin
+  handoffRequested Boolean @default(false)
+  needsHuman      Boolean  @default(false)
+  takenOver       Boolean  @default(false)
+  finished        Boolean  @default(false)
   messages        ChatMessage[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -67,7 +64,7 @@ model Contact {
   phone     String?
   subject   String
   message   String
-  status    String   @default("new") // new, read, responded
+  status    String   @default("new")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -95,21 +92,21 @@ model SiteSettings {
   id            String   @id @default(cuid())
   businessName  String   @default("Climate Tech Plumbing & Renovators")
   phone         String   @default("0720 219802")
-  phone2        String?  // Secondary phone
+  phone2        String?
   email         String   @default("info@climatetechplumbing.co.ke")
   address       String   @default("Thika Rd, Nairobi, Kenya")
   businessHours String   @default("24/7 Emergency Services Available")
   heroTitle     String   @default("Professional Plumbing & Borehole Services")
   heroSubtitle  String   @default("Expert solutions for all your plumbing, borehole drilling, and water system needs in Nairobi & Kenya")
-  heroImage     String?  // URL to hero background image
+  heroImage     String?
   aboutTitle    String   @default("About Climate Tech Plumbing")
   aboutContent  String   @default("We are a professional plumbing company dedicated to providing high-quality services.")
-  aboutImage    String?  // URL to about section image
-  logoUrl       String?  // URL to logo image
-  facebook      String?  // Facebook URL
-  twitter       String?  // Twitter/X URL
-  instagram     String?  // Instagram URL
-  whatsapp      String?  // WhatsApp number
+  aboutImage    String?
+  logoUrl       String?
+  facebook      String?
+  twitter       String?
+  instagram     String?
+  whatsapp      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
