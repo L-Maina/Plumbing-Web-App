@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.climate-tech.co.ke"),
   title: "Climate Tech Plumbing & Renovators | Professional Plumbing Services Nairobi Kenya",
   description: "Nairobi's trusted plumbing experts since 2015. Professional plumbing installation, repairs, bathroom renovations, emergency plumbing services. Available 24/7. Call 0720 219802.",
   keywords: [
@@ -30,7 +31,16 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Climate Tech Plumbing & Renovators" }],
   icons: {
-    icon: "/images/logo.png",
+    icon: [
+      { url: "/images/logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/images/logo.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/images/logo.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [
+      { rel: "mask-icon", url: "/images/logo.png" },
+    ],
   },
   openGraph: {
     title: "Climate Tech Plumbing & Renovators | Professional Plumbing Services Nairobi",
@@ -97,4 +107,3 @@ export default function RootLayout({
     </html>
   );
 }
-// Force rebuild Wed Mar 11 21:03:38 UTC 2026

@@ -11,8 +11,9 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
-    "db:local": "cp prisma/schema.sqlite.prisma prisma/schema.prisma && prisma generate && prisma db push",
-    "db:prod": "prisma generate && prisma db push"
+    "db:local": "cp prisma/schema.prisma prisma/schema.backup.prisma && cp prisma/schema.sqlite.prisma prisma/schema.prisma && prisma generate && prisma db push && cp prisma/schema.backup.prisma prisma/schema.prisma && rm prisma/schema.backup.prisma",
+    "db:prod": "prisma generate && prisma db push",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

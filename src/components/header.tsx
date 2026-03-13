@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; 
 import { 
   Phone, 
   Menu, 
@@ -11,9 +11,25 @@ import {
   Wrench, 
   Clock, 
   MessageCircle,
-  ChevronDown
+  ChevronDown,
+  Facebook,
+  Twitter,
+  Instagram
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+interface SiteSettings {
+  businessName: string;
+  phone: string;
+  phone2: string | null;
+  email: string;
+  address: string;
+  businessHours: string;
+  facebook: string | null;
+  twitter: string | null;
+  instagram: string | null;
+  whatsapp: string | null;
+}
 
 const navItems = [
   { name: "Home", href: "#home" },
@@ -26,6 +42,7 @@ const navItems = [
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +52,21 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
@@ -42,6 +74,12 @@ export function Header() {
     }
     setIsMobileMenuOpen(false);
   };
+
+  const phoneNumber = settings?.phone || "0720 219802";
+  const whatsappNumber = settings?.whatsapp || "254720219802";
+  const facebookUrl = settings?.facebook || "https://facebook.com";
+  const twitterUrl = settings?.twitter || "https://twitter.com";
+  const instagramUrl = settings?.instagram || "https://instagram.com";
 
   return (
     <header
@@ -57,32 +95,60 @@ export function Header() {
       }`}>
         <div className="bg-emerald-700 text-white py-2 px-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
-            <div className="flex items-center gap-6">
-              <a href="tel:0720219802" className="flex items-center gap-2 hover:text-emerald-200 transition-colors">
+            <div className="flex items-center gap-4 md:gap-6">
+              <a href={`tel:${phoneNumber.replace(/\s/g, '')}`} className="flex items-center gap-2 hover:text-emerald-200 transition-colors">
                 <Phone className="h-4 w-4" />
-                <span>0720 219802</span>
+                <span className="hidden sm:inline">{phoneNumber}</span>
               </a>
               <div className="hidden sm:flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>Available 24/7</span>
+                <span>{settings?.businessHours || "Available 24/7"}</span>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
+              {/* WhatsApp */}
               <a 
-                href="https://facebook.com" 
+                href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="hover:text-emerald-200 transition-colors"
+                className="flex items-center gap-1 hover:text-emerald-200 transition-colors"
+                title="Chat on WhatsApp"
               >
-                Facebook
+                <MessageCircle className="h-4 w-4" />
+                <span className="hidden md:inline">WhatsApp</span>
               </a>
+              {/* Instagram */}
               <a 
-                href="https://twitter.com" 
+                href={instagramUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="hover:text-emerald-200 transition-colors"
+                className="flex items-center gap-1 hover:text-emerald-200 transition-colors"
+                title="Follow on Instagram"
               >
-                X (Twitter)
+                <Instagram className="h-4 w-4" />
+                <span className="hidden md:inline">Instagram</span>
+              </a>
+              {/* Facebook */}
+              <a 
+                href={facebookUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 hover:text-emerald-200 transition-colors"
+                title="Follow on Facebook"
+              >
+                <Facebook className="h-4 w-4" />
+                <span className="hidden md:inline">Facebook</span>
+              </a>
+              {/* Twitter/X */}
+              <a 
+                href={twitterUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 hover:text-emerald-200 transition-colors"
+                title="Follow on X"
+              >
+                <Twitter className="h-4 w-4" />
+                <span className="hidden md:inline">X</span>
               </a>
             </div>
           </div>
@@ -106,12 +172,12 @@ export function Header() {
               <span className={`font-bold text-lg leading-tight transition-colors ${
                 isScrolled ? "text-gray-900" : "text-white"
               }`}>
-                Climate Tech
+                {settings?.businessName?.split(' ').slice(0, 2).join(' ') || "Climate Tech"}
               </span>
               <span className={`text-xs font-medium transition-colors ${
                 isScrolled ? "text-emerald-600" : "text-emerald-300"
               }`}>
-                Plumbing & Renovators
+                {settings?.businessName?.split(' ').slice(2).join(' ') || "Plumbing & Renovators"}
               </span>
             </div>
           </a>
@@ -171,8 +237,8 @@ export function Header() {
                     <Wrench className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-bold text-gray-900">Climate Tech</span>
-                    <span className="text-xs text-emerald-600">Plumbing & Renovators</span>
+                    <span className="font-bold text-gray-900">{settings?.businessName?.split(' ').slice(0, 2).join(' ') || "Climate Tech"}</span>
+                    <span className="text-xs text-emerald-600">{settings?.businessName?.split(' ').slice(2).join(' ') || "Plumbing & Renovators"}</span>
                   </div>
                 </div>
 
@@ -200,15 +266,50 @@ export function Header() {
                     Book a Service
                   </Button>
                   <a 
-                    href="tel:0720219802"
+                    href={`tel:${phoneNumber.replace(/\s/g, '')}`}
                     className="flex items-center justify-center gap-2 text-emerald-600 font-medium"
                   >
                     <Phone className="h-4 w-4" />
-                    0720 219802
+                    {phoneNumber}
                   </a>
                   <div className="flex items-center justify-center gap-2 text-gray-600">
                     <Clock className="h-4 w-4" />
-                    <span>Available 24/7</span>
+                    <span>{settings?.businessHours || "Available 24/7"}</span>
+                  </div>
+                  {/* Social Links in Mobile Menu */}
+                  <div className="flex items-center justify-center gap-4 pt-4">
+                    <a 
+                      href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 transition-colors"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                    </a>
+                    <a 
+                      href={instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white hover:opacity-90 transition-opacity"
+                    >
+                      <Instagram className="h-5 w-5" />
+                    </a>
+                    <a 
+                      href={facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+                    >
+                      <Facebook className="h-5 w-5" />
+                    </a>
+                    <a 
+                      href={twitterUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-white hover:bg-gray-900 transition-colors"
+                    >
+                      <Twitter className="h-5 w-5" />
+                    </a>
                   </div>
                 </div>
               </div>

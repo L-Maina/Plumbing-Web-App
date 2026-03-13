@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   Wrench, 
@@ -9,12 +10,27 @@ import {
   Clock, 
   Facebook, 
   Twitter,
+  Instagram,
+  MessageCircle,
   ArrowUp,
   Heart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminDashboard } from "@/components/admin-dashboard";
+
+interface SiteSettings {
+  businessName: string;
+  phone: string;
+  phone2: string | null;
+  email: string;
+  address: string;
+  businessHours: string;
+  facebook: string | null;
+  twitter: string | null;
+  instagram: string | null;
+  whatsapp: string | null;
+}
 
 const services = [
   "Plumbing Installation",
@@ -35,6 +51,23 @@ const quickLinks = [
 ];
 
 export function Footer() {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -45,6 +78,15 @@ export function Footer() {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  const phoneNumber = settings?.phone || "0720 219802";
+  const email = settings?.email || "info@climatetechplumbing.co.ke";
+  const address = settings?.address || "Thika Rd, Nairobi, Kenya";
+  const businessHours = settings?.businessHours || "Available 24/7";
+  const whatsappNumber = settings?.whatsapp || "254720219802";
+  const facebookUrl = settings?.facebook || "https://facebook.com";
+  const twitterUrl = settings?.twitter || "https://twitter.com";
+  const instagramUrl = settings?.instagram || "https://instagram.com";
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -58,27 +100,52 @@ export function Footer() {
                 <Wrench className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-lg">Climate Tech</h3>
-                <p className="text-sm text-emerald-400">Plumbing & Renovators</p>
+                <h3 className="font-bold text-lg">{settings?.businessName?.split(' ').slice(0, 2).join(' ') || "Climate Tech"}</h3>
+                <p className="text-sm text-emerald-400">{settings?.businessName?.split(' ').slice(2).join(' ') || "Plumbing & Renovators"}</p>
               </div>
             </div>
             <p className="text-gray-400 text-sm">
               Nairobi&apos;s trusted plumbing experts since 2015. Professional, reliable, and available 24/7 for all your plumbing needs.
             </p>
-            <div className="flex gap-4">
+            {/* Social Links */}
+            <div className="flex gap-3">
+              {/* WhatsApp */}
               <a 
-                href="https://facebook.com" 
+                href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-500 transition-colors"
+                className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center hover:bg-green-500 transition-colors"
+                title="Chat on WhatsApp"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </a>
+              {/* Instagram */}
+              <a 
+                href={instagramUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+                title="Follow on Instagram"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+              {/* Facebook */}
+              <a 
+                href={facebookUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors"
+                title="Follow on Facebook"
               >
                 <Facebook className="h-5 w-5" />
               </a>
+              {/* Twitter/X */}
               <a 
-                href="https://twitter.com" 
+                href={twitterUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-500 transition-colors"
+                className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors"
+                title="Follow on X"
               >
                 <Twitter className="h-5 w-5" />
               </a>
@@ -124,23 +191,34 @@ export function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-400 text-sm">Thika Rd, Nairobi, Kenya</span>
+                <span className="text-gray-400 text-sm">{address}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-emerald-400 flex-shrink-0" />
-                <a href="tel:0720219802" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                  0720 219802
+                <a href={`tel:${phoneNumber.replace(/\s/g, '')}`} className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
+                  {phoneNumber}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-emerald-400 flex-shrink-0" />
-                <a href="mailto:info@climate-tech.co.ke" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                  info@climate-tech.co.ke
+                <a href={`mailto:${email}`} className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
+                  {email}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Clock className="h-5 w-5 text-emerald-400 flex-shrink-0" />
-                <span className="text-gray-400 text-sm">Available 24/7</span>
+                <span className="text-gray-400 text-sm">{businessHours}</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <MessageCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+                <a 
+                  href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-green-400 transition-colors text-sm"
+                >
+                  Chat on WhatsApp
+                </a>
               </li>
             </ul>
           </div>
@@ -152,7 +230,7 @@ export function Footer() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-gray-400 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} Climate Tech Plumbing & Renovators. All rights reserved.
+              © {new Date().getFullYear()} {settings?.businessName || "Climate Tech Plumbing & Renovators"}. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-gray-400 text-sm">
