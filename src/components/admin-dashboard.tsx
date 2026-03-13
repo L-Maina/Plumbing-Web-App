@@ -51,7 +51,8 @@ import {
   Instagram,
   Globe,
   Upload,
-  PhoneCall
+  PhoneCall,
+  Plus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -147,7 +148,7 @@ interface SiteSettings {
   whatsapp: string | null;
 }
 
-type PageType = "dashboard" | "bookings" | "messages" | "livechat" | "subscribers" | "reviews" | "settings";
+type PageType = "dashboard" | "bookings" | "messages" | "livechat" | "subscribers" | "reviews" | "services" | "settings";
 
 const ADMIN_PASSWORD = "climate2024";
 
@@ -188,6 +189,21 @@ export function AdminDashboard() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+  
+  // Services state
+  const [services, setServices] = useState<{ id: string; title: string; description: string; icon: string; image: string | null; order: number; active: boolean }[]>([]);
+  const [newService, setNewService] = useState({ title: "", description: "", icon: "Wrench", image: "" });
+  const [editingService, setEditingService] = useState<string | null>(null);
+  const [savingService, setSavingService] = useState(false);
+  const [uploadingServiceImage, setUploadingServiceImage] = useState<string | null>(null);
+
+  // Newsletter/Bulk Email state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailContent, setEmailContent] = useState("");
+  const [sendingBulkEmail, setSendingBulkEmail] = useState(false);
+  const [bulkEmailResult, setBulkEmailResult] = useState<{ success: number; failed: number } | null>(null);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -277,6 +293,7 @@ export function AdminDashboard() {
       fetchData();
       fetchChatSessions();
       fetchSettings();
+      fetchServices();
     } else {
       setPasswordError("Incorrect password");
     }
@@ -302,6 +319,66 @@ export function AdminDashboard() {
       setSettings(result);
     } catch (error) {
       console.error("Error fetching settings:", error);
+    }
+  };
+
+  // Services management
+  const fetchServices = async () => {
+    try {
+      const response = await fetch("/api/services");
+      const result = await response.json();
+      setServices(result);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  };
+
+  const addService = async () => {
+    if (!newService.title.trim() || !newService.description.trim()) return;
+    setSavingService(true);
+    try {
+      const response = await fetch("/api/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newService),
+      });
+      if (response.ok) {
+        setNewService({ title: "", description: "", icon: "Wrench", image: "" });
+        fetchServices();
+      }
+    } catch (error) {
+      console.error("Error adding service:", error);
+    } finally {
+      setSavingService(false);
+    }
+  };
+
+  const updateService = async (id: string, data: { title: string; description: string; icon: string; active: boolean }) => {
+    setSavingService(true);
+    try {
+      const response = await fetch("/api/services", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...data }),
+      });
+      if (response.ok) {
+        setEditingService(null);
+        fetchServices();
+      }
+    } catch (error) {
+      console.error("Error updating service:", error);
+    } finally {
+      setSavingService(false);
+    }
+  };
+
+  const deleteService = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this service?")) return;
+    try {
+      await fetch(`/api/services?id=${id}`, { method: "DELETE" });
+      fetchServices();
+    } catch (error) {
+      console.error("Error deleting service:", error);
     }
   };
 
@@ -578,6 +655,7 @@ export function AdminDashboard() {
     { id: "livechat" as PageType, label: "Live Chat", icon: MessageCircle, count: chatSessions.filter(s => s.handoffRequested && !s.takenOver && !s.finished).length },
     { id: "subscribers" as PageType, label: "Subscribers", icon: Users, count: data?.newsletters.length },
     { id: "reviews" as PageType, label: "Reviews", icon: Star, count: data?.reviews.length },
+    { id: "services" as PageType, label: "Services", icon: Wrench },
     { id: "settings" as PageType, label: "Settings", icon: Settings },
   ];
 
@@ -592,7 +670,7 @@ export function AdminDashboard() {
           </div>
           <div>
             <h2 className="text-base md:text-lg font-bold text-white">Admin Panel</h2>
-            <p className="text-xs md:text-sm text-gray-400">Climate Tech</p>
+            <p className="text-xs md:text-sm text-gray-400">{settings?.businessName || "Climate Tech"}</p>
           </div>
         </div>
       </div>
@@ -773,14 +851,6 @@ export function AdminDashboard() {
                         </Button>
                       </motion.div>
 
-                      <motion.p 
-                        className="text-xs md:text-sm text-center text-gray-400 mt-6 md:mt-8"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1 }}
-                      >
-                        💡 Demo password: climate2024
-                      </motion.p>
                     </div>
                   </motion.div>
                 ) : isLoading ? (
@@ -1485,6 +1555,126 @@ export function AdminDashboard() {
                                   ))}
                                 </div>
                               )}
+                            </div>
+                          )}
+
+                          {/* SERVICES PAGE */}
+                          {currentPage === "services" && (
+                            <div className="space-y-4 md:space-y-6">
+                              {/* Header */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+                                <div>
+                                  <h2 className="text-lg md:text-2xl font-bold text-gray-800">Services Management</h2>
+                                  <p className="text-gray-500 text-xs md:text-base">Add, edit, or remove services from your website</p>
+                                </div>
+                              </div>
+
+                              {/* Add New Service */}
+                              <div className="bg-white rounded-lg md:rounded-xl border p-4 md:p-6 shadow-sm">
+                                <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Add New Service</h3>
+                                <div className="grid gap-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="text-xs md:text-sm font-medium text-gray-700 mb-1 block">Title</label>
+                                      <Input
+                                        value={newService.title}
+                                        onChange={(e) => setNewService({ ...newService, title: e.target.value })}
+                                        placeholder="e.g., Plumbing Installation"
+                                        className="text-sm md:text-base"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-xs md:text-sm font-medium text-gray-700 mb-1 block">Icon</label>
+                                      <select
+                                        value={newService.icon}
+                                        onChange={(e) => setNewService({ ...newService, icon: e.target.value })}
+                                        className="w-full h-10 px-3 border rounded-lg text-sm md:text-base"
+                                      >
+                                        <option value="Wrench">Wrench</option>
+                                        <option value="Droplets">Droplets</option>
+                                        <option value="Thermometer">Thermometer</option>
+                                        <option value="Bath">Bath</option>
+                                        <option value="Zap">Zap</option>
+                                        <option value="Droplet">Droplet</option>
+                                        <option value="RefreshCw">Refresh</option>
+                                        <option value="Hammer">Hammer</option>
+                                        <option value="Home">Home</option>
+                                        <option value="AlertTriangle">Alert</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="text-xs md:text-sm font-medium text-gray-700 mb-1 block">Description</label>
+                                    <Textarea
+                                      value={newService.description}
+                                      onChange={(e) => setNewService({ ...newService, description: e.target.value })}
+                                      placeholder="Describe the service..."
+                                      rows={3}
+                                      className="text-sm md:text-base"
+                                    />
+                                  </div>
+                                  <div className="flex justify-end">
+                                    <Button 
+                                      onClick={addService} 
+                                      disabled={!newService.title.trim() || !newService.description.trim() || savingService}
+                                      className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                                    >
+                                      {savingService ? (
+                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                      ) : (
+                                        <Plus className="h-4 w-4 mr-2" />
+                                      )}
+                                      Add Service
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Services List */}
+                              <div className="bg-white rounded-lg md:rounded-xl border p-4 md:p-6 shadow-sm">
+                                <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Current Services</h3>
+                                {services.length === 0 ? (
+                                  <div className="text-center py-8 text-gray-500">
+                                    <Wrench className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                                    <p>No services added yet. Add your first service above.</p>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-4">
+                                    {services.map((service) => (
+                                      <div key={service.id} className="border rounded-lg p-4 flex items-start justify-between gap-4">
+                                        <div className="flex-1">
+                                          <h4 className="font-medium text-gray-800">{service.title}</h4>
+                                          <p className="text-sm text-gray-500 mt-1">{service.description}</p>
+                                          <div className="flex items-center gap-2 mt-2">
+                                            <Badge variant={service.active ? "default" : "secondary"} className={service.active ? "bg-emerald-100 text-emerald-700" : ""}>
+                                              {service.active ? "Active" : "Inactive"}
+                                            </Badge>
+                                            <span className="text-xs text-gray-400">Icon: {service.icon}</span>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => updateService(service.id, { ...service, active: !service.active })}
+                                            className="text-xs"
+                                          >
+                                            {service.active ? "Deactivate" : "Activate"}
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => deleteService(service.id)}
+                                            className="text-red-600 text-xs"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
 
