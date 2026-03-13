@@ -1,0 +1,124 @@
+// Production schema (PostgreSQL for Vercel/Neon)
+// Use this for production deployment
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String
+  service     String
+  date        String
+  time        String
+  address     String
+  notes       String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  name      String
+  rating    Int
+  comment   String
+  service   String?
+  approved  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender    String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model ChatSession {
+  id              String   @id @default(cuid())
+  customerName    String?
+  handoffRequested Boolean @default(false)
+  needsHuman      Boolean  @default(false)
+  takenOver       Boolean  @default(false)
+  finished        Boolean  @default(false)
+  messages        ChatMessage[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String
+  image       String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSettings {
+  id            String   @id @default(cuid())
+  businessName  String   @default("Climate Tech Plumbing & Renovators")
+  phone         String   @default("0720 219802")
+  phone2        String?
+  email         String   @default("info@climatetechplumbing.co.ke")
+  address       String   @default("Thika Rd, Nairobi, Kenya")
+  businessHours String   @default("24/7 Emergency Services Available")
+  heroTitle     String   @default("Professional Plumbing & Borehole Services")
+  heroSubtitle  String   @default("Expert solutions for all your plumbing, borehole drilling, and water system needs in Nairobi & Kenya")
+  heroImage     String?
+  aboutTitle    String   @default("About Climate Tech Plumbing")
+  aboutContent  String   @default("We are a professional plumbing company dedicated to providing high-quality services.")
+  aboutImage    String?
+  logoUrl       String?
+  facebook      String?
+  twitter       String?
+  instagram     String?
+  whatsapp      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String   @default("Wrench")
+  image       String?
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
