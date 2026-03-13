@@ -20,6 +20,7 @@ export async function GET() {
       handoffRequested: session.handoffRequested,
       needsHuman: session.needsHuman,
       takenOver: session.takenOver,
+      finished: session.finished,
       messages: session.messages.map(msg => ({
         id: msg.id,
         sender: msg.sender,

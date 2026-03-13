@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
 
 interface Message {
   sender: string;
@@ -60,6 +59,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Dynamically import ZAI
+    const ZAI = (await import("z-ai-web-dev-sdk")).default;
     const zai = await ZAI.create();
 
     // Build conversation context
@@ -94,17 +95,22 @@ export async function POST(request: NextRequest) {
     response = response.replace(/https?:\/\/[^\s]+/gi, '');
     response = response.replace(/climate-tech\.co\.ke/gi, 'our company');
 
-    // Additional keyword-based detection for human intervention
-    const humanKeywords = [
-      'book', 'appointment', 'schedule', 'emergency', 'now', 'urgent',
-      'price', 'cost', 'quote', 'how much', 'come to', 'my house',
-      'my home', 'address', 'visit', 'speak to', 'talk to', 'manager',
-      'complaint', 'unhappy', 'not satisfied', 'problem', 'issue',
-      'leak', 'burst', 'flood', 'no water', 'blocked', 'clogged'
+    // Only trigger human handoff for specific intent keywords
+    // These are keywords where the customer explicitly wants human help
+    const explicitHumanKeywords = [
+      'book now', 'book a', 'make an appointment', 'schedule a',
+      'emergency', 'urgent', 'right now', 'immediately',
+      'speak to someone', 'talk to someone', 'speak to a human', 'talk to a human',
+      'speak to manager', 'talk to manager', 'manager',
+      'complaint', 'unhappy', 'not satisfied', 'terrible', 'awful',
+      'come to my', 'visit my', 'my address is', 'come to the house',
+      'how much does it cost', 'give me a quote', 'need a quote', 'price for'
     ];
 
     const lowerMessage = userMessage.toLowerCase();
-    needsHuman = humanKeywords.some(keyword => lowerMessage.includes(keyword));
+    
+    // Only trigger if explicit intent is detected
+    needsHuman = explicitHumanKeywords.some(keyword => lowerMessage.includes(keyword));
 
     return NextResponse.json({
       success: true,
@@ -115,10 +121,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error in chat AI:", error);
     
+    // Return a helpful fallback response instead of erroring
     return NextResponse.json({
-      success: false,
-      response: "I'd be happy to help! For immediate assistance, please call us at 0720 219802. We're available 24/7!",
-      needsHuman: true
+      success: true,
+      response: "Hello! I'm here to help with your plumbing needs. How can I assist you today? For immediate assistance, you can also call us at 0720 219802.",
+      needsHuman: false
     });
   }
 }

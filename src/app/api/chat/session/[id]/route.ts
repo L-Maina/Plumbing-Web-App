@@ -34,6 +34,7 @@ export async function GET(
       handoffRequested: session.handoffRequested,
       needsHuman: session.needsHuman,
       takenOver: session.takenOver,
+      finished: session.finished,
       messages: session.messages.map(m => ({
         id: m.id,
         sender: m.sender,

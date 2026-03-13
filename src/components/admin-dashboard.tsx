@@ -481,6 +481,10 @@ export function AdminDashboard() {
       const result = await response.json();
       if (result.success) {
         setSettingsSaved(true);
+        // Dispatch custom event to notify other components to refresh settings
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('settingsUpdated', { detail: settings }));
+        }
         setTimeout(() => setSettingsSaved(false), 3000);
       }
     } catch (error) {
@@ -1923,6 +1927,18 @@ export function AdminDashboard() {
                                             value={settings.instagram || ""}
                                             onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
                                             placeholder="https://instagram.com/yourhandle"
+                                            className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
+                                          />
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">X (Twitter) URL</label>
+                                        <div className="relative">
+                                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-sm text-gray-400">𝕏</span>
+                                          <Input
+                                            value={settings.twitter || ""}
+                                            onChange={(e) => setSettings({ ...settings, twitter: e.target.value })}
+                                            placeholder="https://x.com/yourhandle"
                                             className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>

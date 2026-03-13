@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,13 +14,50 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+interface SiteSettings {
+  businessName: string;
+  phone: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImage: string | null;
+}
+
 export function HeroSection() {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+
+    // Listen for settings updates from admin
+    const handleSettingsUpdate = () => {
+      fetchSettings();
+    };
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+    return () => window.removeEventListener('settingsUpdated', handleSettingsUpdate);
+  }, []);
+
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  const businessName = settings?.businessName || "Climate Tech Plumbing & Renovators";
+  const heroTitle = settings?.heroTitle || "Professional Plumbing & Borehole Services";
+  const heroSubtitle = settings?.heroSubtitle || "Expert solutions for all your plumbing, borehole drilling, and water system needs in Nairobi & Kenya";
+  const phoneNumber = settings?.phone || "0720 219802";
 
   return (
     <section id="home" className="relative min-h-screen flex items-center">
@@ -54,11 +92,10 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
           >
-            Professional{" "}
+            {heroTitle.split(' ').slice(0, 2).join(' ')}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-              Plumbing Services
-            </span>{" "}
-            in Nairobi
+              {heroTitle.split(' ').slice(2).join(' ') || "Plumbing Services"}
+            </span>
           </motion.h1>
 
           <motion.p
@@ -67,8 +104,7 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl"
           >
-            Nairobi&apos;s trusted plumbing experts since 2015. We provide reliable, professional 
-            plumbing installation, repairs, and renovation services across Kenya.
+            {heroSubtitle}
           </motion.p>
 
           <motion.div

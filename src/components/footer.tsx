@@ -66,6 +66,13 @@ export function Footer() {
       }
     };
     fetchSettings();
+
+    // Listen for settings updates from admin
+    const handleSettingsUpdate = () => {
+      fetchSettings();
+    };
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+    return () => window.removeEventListener('settingsUpdated', handleSettingsUpdate);
   }, []);
 
   const scrollToTop = () => {

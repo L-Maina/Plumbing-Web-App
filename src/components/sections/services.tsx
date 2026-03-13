@@ -96,6 +96,9 @@ export function ServicesSection() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
+        // First, try to seed default data if needed
+        await fetch("/api/seed");
+        
         const response = await fetch("/api/services");
         if (response.ok) {
           const data = await response.json();

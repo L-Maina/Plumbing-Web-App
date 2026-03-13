@@ -68,6 +68,13 @@ export function Header() {
       }
     };
     fetchSettings();
+
+    // Listen for settings updates from admin
+    const handleSettingsUpdate = () => {
+      fetchSettings();
+    };
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+    return () => window.removeEventListener('settingsUpdated', handleSettingsUpdate);
   }, []);
 
   const scrollToSection = (href: string) => {
@@ -147,11 +154,11 @@ export function Header() {
                 href={twitterUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-emerald-200 transition-colors"
+                className="flex items-center gap-1.5 hover:text-emerald-200 transition-colors px-2"
                 title="Follow on X"
               >
-                <span className="font-bold text-sm">𝕏</span>
-                <span className="hidden md:inline">X</span>
+                <span className="font-bold text-base">𝕏</span>
+                <span className="hidden md:inline text-sm">X</span>
               </a>
             </div>
           </div>
@@ -234,19 +241,21 @@ export function Header() {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <div className="flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                    <Wrench className="h-5 w-5 text-white" />
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
+              <div className="flex flex-col h-full bg-gray-50">
+                {/* Header with padding */}
+                <div className="flex items-center gap-4 p-6 bg-white border-b">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Wrench className="h-6 w-6 text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-bold text-gray-900">{settings?.businessName?.split(' ').slice(0, 2).join(' ') || "Climate Tech"}</span>
-                    <span className="text-xs text-emerald-600">{settings?.businessName?.split(' ').slice(2).join(' ') || "Plumbing & Renovators"}</span>
+                    <span className="font-bold text-gray-900 text-lg">{settings?.businessName?.split(' ').slice(0, 2).join(' ') || "Climate Tech"}</span>
+                    <span className="text-sm text-emerald-600">{settings?.businessName?.split(' ').slice(2).join(' ') || "Plumbing & Renovators"}</span>
                   </div>
                 </div>
 
-                <nav className="flex flex-col gap-2">
+                {/* Navigation with better padding */}
+                <nav className="flex flex-col gap-2 p-4 flex-1">
                   {navItems.map((item) => (
                     <a
                       key={item.name}
@@ -255,29 +264,32 @@ export function Header() {
                         e.preventDefault();
                         scrollToSection(item.href);
                       }}
-                      className="flex items-center gap-3 text-lg font-medium text-gray-700 hover:text-emerald-500 transition-colors py-3 px-2 rounded-lg hover:bg-emerald-50"
+                      className="flex items-center gap-4 text-lg font-medium text-gray-700 hover:text-emerald-600 transition-colors py-4 px-5 rounded-xl hover:bg-white shadow-sm"
                     >
-                      <item.icon className="h-5 w-5" />
+                      <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <item.icon className="h-5 w-5 text-emerald-600" />
+                      </div>
                       {item.name}
                     </a>
                   ))}
                 </nav>
 
-                <div className="mt-auto space-y-4 pt-8 border-t">
+                {/* Footer section with padding */}
+                <div className="p-6 space-y-4 bg-white border-t">
                   <Button 
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-6 text-lg rounded-xl shadow-lg"
                     onClick={() => scrollToSection("#booking")}
                   >
                     Book a Service
                   </Button>
                   <a 
                     href={`tel:${phoneNumber.replace(/\s/g, '')}`}
-                    className="flex items-center justify-center gap-2 text-emerald-600 font-medium"
+                    className="flex items-center justify-center gap-2 text-emerald-600 font-medium text-lg"
                   >
-                    <Phone className="h-4 w-4" />
+                    <Phone className="h-5 w-5" />
                     {phoneNumber}
                   </a>
-                  <div className="flex items-center justify-center gap-2 text-gray-600">
+                  <div className="flex items-center justify-center gap-2 text-gray-500">
                     <Clock className="h-4 w-4" />
                     <span>{settings?.businessHours || "Available 24/7"}</span>
                   </div>
@@ -287,33 +299,33 @@ export function Header() {
                       href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 transition-colors"
+                      className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-white hover:bg-green-600 transition-colors shadow-md"
                     >
-                      <MessageCircle className="h-5 w-5" />
+                      <MessageCircle className="h-6 w-6" />
                     </a>
                     <a 
                       href={instagramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white hover:opacity-90 transition-opacity"
+                      className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white hover:opacity-90 transition-opacity shadow-md"
                     >
-                      <Instagram className="h-5 w-5" />
+                      <Instagram className="h-6 w-6" />
                     </a>
                     <a 
                       href={facebookUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+                      className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white hover:bg-blue-700 transition-colors shadow-md"
                     >
-                      <Facebook className="h-5 w-5" />
+                      <Facebook className="h-6 w-6" />
                     </a>
                     <a 
                       href={twitterUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-white hover:bg-gray-900 transition-colors"
+                      className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center text-white hover:bg-gray-900 transition-colors shadow-md"
                     >
-                      <span className="font-bold text-lg">𝕏</span>
+                      <span className="font-bold text-xl">𝕏</span>
                     </a>
                   </div>
                 </div>
