@@ -663,9 +663,9 @@ export function AdminDashboard() {
   const SidebarNav = ({ onNavigate }: { onNavigate?: () => void }) => (
     <>
       {/* Logo */}
-      <div className="p-4 md:p-6 border-b border-gray-700">
-        <div className="flex items-center gap-3 md:gap-4">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center flex-shrink-0">
+      <div className="p-5 md:p-6 border-b border-gray-700">
+        <div className="flex items-center gap-4">
+          <div className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
             <KeyRound className="h-5 w-5 md:h-6 md:w-6 text-white" />
           </div>
           <div>
@@ -676,7 +676,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 md:p-4 space-y-1 md:space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-4 md:p-5 space-y-2 overflow-y-auto">
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -686,7 +686,7 @@ export function AdminDashboard() {
               setSidebarOpen(false);
               onNavigate?.();
             }}
-            className={`w-full flex items-center gap-3 md:gap-4 px-4 md:px-5 py-3 md:py-4 rounded-xl text-left transition-all ${
+            className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl text-left transition-all ${
               currentPage === item.id
                 ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
                 : "text-gray-400 hover:bg-gray-700/50 hover:text-white"
@@ -704,9 +704,9 @@ export function AdminDashboard() {
       </nav>
 
       {/* User Info */}
-      <div className="p-3 md:p-4 border-t border-gray-700">
-        <div className="flex items-center gap-3 md:gap-4 px-3 md:px-4 py-3 md:py-4 bg-gray-700/30 rounded-xl">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+      <div className="p-4 md:p-5 border-t border-gray-700">
+        <div className="flex items-center gap-4 px-4 py-3.5 bg-gray-700/30 rounded-xl">
+          <div className="w-10 h-10 md:w-11 md:h-11 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
             <User className="h-5 w-5 md:h-6 md:w-6 text-white" />
           </div>
           <div>

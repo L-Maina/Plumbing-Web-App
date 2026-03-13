@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,12 +19,27 @@ import {
   Loader2,
   CheckCircle,
   Facebook,
-  Twitter
+  Instagram,
+  MessageCircle
 } from "lucide-react";
+
+interface SiteSettings {
+  businessName: string;
+  phone: string;
+  phone2: string | null;
+  email: string;
+  address: string;
+  businessHours: string;
+  facebook: string | null;
+  twitter: string | null;
+  instagram: string | null;
+  whatsapp: string | null;
+}
 
 export function ContactSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,6 +47,21 @@ export function ContactSection() {
     subject: "",
     message: "",
   });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +92,14 @@ export function ContactSection() {
       setIsSubmitting(false);
     }
   };
+
+  const phoneNumber = settings?.phone || "0720 219802";
+  const email = settings?.email || "info@climatetechplumbing.co.ke";
+  const address = settings?.address || "Thika Rd, Nairobi, Kenya";
+  const businessHours = settings?.businessHours || "24/7 Emergency Service";
+  const whatsappNumber = settings?.whatsapp || "254720219802";
+  const facebookUrl = settings?.facebook || "https://facebook.com";
+  const instagramUrl = settings?.instagram || "https://instagram.com";
 
   return (
     <section id="contact" className="py-20 bg-gray-50">
@@ -102,8 +140,8 @@ export function ContactSection() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
-                    <a href="tel:0720219802" className="text-emerald-600 font-medium hover:underline">
-                      0720 219802
+                    <a href={`tel:${phoneNumber.replace(/\s/g, '')}`} className="text-emerald-600 font-medium hover:underline">
+                      {phoneNumber}
                     </a>
                     <p className="text-sm text-gray-500 mt-1">Available 24/7</p>
                   </div>
@@ -119,8 +157,8 @@ export function ContactSection() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                    <a href="mailto:info@climate-tech.co.ke" className="text-emerald-600 font-medium hover:underline">
-                      info@climate-tech.co.ke
+                    <a href={`mailto:${email}`} className="text-emerald-600 font-medium hover:underline">
+                      {email}
                     </a>
                     <p className="text-sm text-gray-500 mt-1">We reply within 24 hours</p>
                   </div>
@@ -136,7 +174,7 @@ export function ContactSection() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Address</h3>
-                    <p className="text-gray-600">Thika Rd, Nairobi, Kenya</p>
+                    <p className="text-gray-600">{address}</p>
                     <p className="text-sm text-gray-500 mt-1">Visit our office</p>
                   </div>
                 </div>
@@ -151,7 +189,7 @@ export function ContactSection() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Working Hours</h3>
-                    <p className="text-gray-600">24/7 Emergency Service</p>
+                    <p className="text-gray-600">{businessHours}</p>
                     <p className="text-sm text-gray-500 mt-1">Always available</p>
                   </div>
                 </div>
@@ -159,22 +197,33 @@ export function ContactSection() {
             </Card>
 
             {/* Social Media */}
-            <div className="flex gap-4 pt-4">
+            <div className="flex gap-3 pt-4">
               <a
-                href="https://facebook.com"
+                href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center hover:bg-emerald-500 transition-colors"
+                className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors"
+                title="WhatsApp"
               >
-                <Facebook className="h-5 w-5 text-white" />
+                <MessageCircle className="h-5 w-5 text-white" />
               </a>
               <a
-                href="https://twitter.com"
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center hover:bg-emerald-500 transition-colors"
+                className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+                title="Instagram"
               >
-                <Twitter className="h-5 w-5 text-white" />
+                <Instagram className="h-5 w-5 text-white" />
+              </a>
+              <a
+                href={facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors"
+                title="Facebook"
+              >
+                <Facebook className="h-5 w-5 text-white" />
               </a>
             </div>
           </motion.div>

@@ -139,7 +139,7 @@ export function Footer() {
               >
                 <Facebook className="h-5 w-5" />
               </a>
-              {/* Twitter/X */}
+              {/* X */}
               <a 
                 href={twitterUrl} 
                 target="_blank" 
@@ -147,7 +147,7 @@ export function Footer() {
                 className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors"
                 title="Follow on X"
               >
-                <Twitter className="h-5 w-5" />
+                <span className="font-bold text-lg">𝕏</span>
               </a>
             </div>
           </div>

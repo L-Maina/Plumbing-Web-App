@@ -13,7 +13,6 @@ import {
   MessageCircle,
   ChevronDown,
   Facebook,
-  Twitter,
   Instagram
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -139,7 +138,7 @@ export function Header() {
                 <Facebook className="h-4 w-4" />
                 <span className="hidden md:inline">Facebook</span>
               </a>
-              {/* Twitter/X */}
+              {/* X (Twitter) */}
               <a 
                 href={twitterUrl} 
                 target="_blank" 
@@ -147,7 +146,7 @@ export function Header() {
                 className="flex items-center gap-1 hover:text-emerald-200 transition-colors"
                 title="Follow on X"
               >
-                <Twitter className="h-4 w-4" />
+                <span className="font-bold text-sm">𝕏</span>
                 <span className="hidden md:inline">X</span>
               </a>
             </div>
@@ -308,7 +307,7 @@ export function Header() {
                       rel="noopener noreferrer"
                       className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-white hover:bg-gray-900 transition-colors"
                     >
-                      <Twitter className="h-5 w-5" />
+                      <span className="font-bold text-lg">𝕏</span>
                     </a>
                   </div>
                 </div>
