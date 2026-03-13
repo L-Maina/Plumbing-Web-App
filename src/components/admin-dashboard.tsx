@@ -12,6 +12,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Calendar,
   Mail,
   Phone,
@@ -43,16 +50,13 @@ import {
   MailOpen,
   MapPinned,
   ClockIcon,
-  Type,
-  FileText,
-  Image,
   Facebook,
-  Twitter,
   Instagram,
   Globe,
   Upload,
   PhoneCall,
-  Plus
+  Plus,
+  Download
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -629,6 +633,82 @@ export function AdminDashboard() {
     }
   };
 
+  // Bulk Email Functions
+  const sendBulkEmail = async () => {
+    if (!emailSubject.trim() || !emailContent.trim()) return;
+    
+    setSendingBulkEmail(true);
+    setBulkEmailResult(null);
+    
+    try {
+      const response = await fetch("/api/newsletter/bulk-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: emailSubject,
+          content: emailContent,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setBulkEmailResult({
+          success: result.sent || 0,
+          failed: result.failed || 0,
+        });
+        // Clear form after successful send
+        setEmailSubject("");
+        setEmailContent("");
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          setShowEmailModal(false);
+          setBulkEmailResult(null);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Error sending bulk email:", error);
+      setBulkEmailResult({ success: 0, failed: data?.newsletters.length || 0 });
+    } finally {
+      setSendingBulkEmail(false);
+    }
+  };
+
+  const exportSubscribersCsv = async () => {
+    if (!data?.newsletters.length) return;
+    
+    setExportingCsv(true);
+    
+    try {
+      // Create CSV content
+      const headers = ["Email", "Subscribed At"];
+      const rows = data.newsletters.map(sub => [
+        sub.email,
+        new Date(sub.createdAt).toLocaleString()
+      ]);
+      
+      const csvContent = [
+        headers.join(","),
+        ...rows.map(row => row.join(","))
+      ].join("\n");
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `subscribers_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+    } finally {
+      setExportingCsv(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -675,8 +755,8 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 md:p-5 space-y-2 overflow-y-auto">
+      {/* Navigation - Fixed padding for mobile app feel */}
+      <nav className="flex-1 p-5 md:p-6 space-y-3 overflow-y-auto">
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -686,7 +766,7 @@ export function AdminDashboard() {
               setSidebarOpen(false);
               onNavigate?.();
             }}
-            className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl text-left transition-all ${
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl text-left transition-all ${
               currentPage === item.id
                 ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30"
                 : "text-gray-400 hover:bg-gray-700/50 hover:text-white"
@@ -704,8 +784,8 @@ export function AdminDashboard() {
       </nav>
 
       {/* User Info */}
-      <div className="p-4 md:p-5 border-t border-gray-700">
-        <div className="flex items-center gap-4 px-4 py-3.5 bg-gray-700/30 rounded-xl">
+      <div className="p-5 md:p-6 border-t border-gray-700">
+        <div className="flex items-center gap-4 px-4 py-4 bg-gray-700/30 rounded-xl">
           <div className="w-10 h-10 md:w-11 md:h-11 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
             <User className="h-5 w-5 md:h-6 md:w-6 text-white" />
           </div>
@@ -817,7 +897,7 @@ export function AdminDashboard() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             onKeyPress={(e) => e.key === "Enter" && handleLogin()}
-                            className="h-12 md:h-14 text-lg md:text-xl text-center tracking-wider border-2 border-gray-300 focus:border-emerald-500 transition-colors pr-14 text-gray-900 bg-white"
+                            className="h-12 md:h-14 text-lg md:text-xl text-center tracking-wider border-2 border-gray-300 focus:border-emerald-500 transition-colors pr-14 text-gray-900 bg-white placeholder:text-gray-400"
                           />
                           <button
                             type="button"
@@ -1130,7 +1210,7 @@ export function AdminDashboard() {
                                           </Button>
                                         )}
                                         
-                                        <Button variant="outline" size="sm" onClick={() => deleteRecord("booking", booking.id)} className="text-red-600 p-2 md:px-4">
+                                        <Button variant="outline" size="sm" onClick={() => deleteRecord("booking", booking.id)} className="text-red-600 hover:bg-red-50 p-2 md:px-4">
                                           <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                                         </Button>
                                       </div>
@@ -1163,7 +1243,7 @@ export function AdminDashboard() {
                                             <p className="text-gray-500 text-sm md:text-base truncate">{contact.email}</p>
                                           </div>
                                         </div>
-                                        <Badge className={getStatusColor(contact.status)}>{contact.status}</Badge>
+                                        <Badge className={`${getStatusColor(contact.status)} text-white`}>{contact.status}</Badge>
                                       </div>
                                       
                                       <div className="bg-gray-50 rounded-lg p-3 md:p-4 mb-3 md:mb-4">
@@ -1176,11 +1256,11 @@ export function AdminDashboard() {
                                           {new Date(contact.createdAt).toLocaleString()}
                                         </span>
                                         <div className="flex-1" />
-                                        <Button variant="outline" size="sm" onClick={() => updateContactStatus(contact.id, "read")} className="text-xs md:text-sm">
+                                        <Button variant="outline" size="sm" onClick={() => updateContactStatus(contact.id, "read")} className="text-gray-700 border-gray-300 hover:bg-gray-100 text-xs md:text-sm">
                                           <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                                           Read
                                         </Button>
-                                        <Button variant="outline" size="sm" onClick={() => deleteRecord("contact", contact.id)} className="text-red-600 p-2 md:px-4">
+                                        <Button variant="outline" size="sm" onClick={() => deleteRecord("contact", contact.id)} className="text-red-600 hover:bg-red-50 p-2 md:px-4">
                                           <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                                         </Button>
                                       </div>
@@ -1297,7 +1377,7 @@ export function AdminDashboard() {
                                       >
                                         <ChevronRight className="h-5 w-5 rotate-180" />
                                       </Button>
-                                      <span className="font-medium">{activeSession.customerName || "Guest"}</span>
+                                      <span className="font-medium text-gray-800">{activeSession.customerName || "Guest"}</span>
                                     </div>
                                   )}
                                   
@@ -1420,7 +1500,7 @@ export function AdminDashboard() {
                                                 onChange={(e) => setChatInput(e.target.value)}
                                                 onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
                                                 placeholder="Type a message..."
-                                                className="flex-1 bg-white rounded-full px-4 py-2 text-gray-800 border-0 focus-visible:ring-2 focus-visible:ring-emerald-500 text-sm md:text-base"
+                                                className="flex-1 bg-white rounded-full px-4 py-2 text-gray-800 border-0 focus-visible:ring-2 focus-visible:ring-emerald-500 text-sm md:text-base placeholder:text-gray-400"
                                               />
                                               <Button
                                                 onClick={sendChatMessage}
@@ -1475,6 +1555,31 @@ export function AdminDashboard() {
                           {/* SUBSCRIBERS PAGE */}
                           {currentPage === "subscribers" && (
                             <div className="space-y-4 md:space-y-6">
+                              {/* Action Buttons */}
+                              <div className="flex flex-wrap gap-3">
+                                <Button
+                                  onClick={() => setShowEmailModal(true)}
+                                  disabled={!data.newsletters.length}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                                >
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Send Bulk Email
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={exportSubscribersCsv}
+                                  disabled={!data.newsletters.length || exportingCsv}
+                                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                                >
+                                  {exportingCsv ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <Download className="h-4 w-4 mr-2" />
+                                  )}
+                                  Export CSV
+                                </Button>
+                              </div>
+
                               {data.newsletters.length === 0 ? (
                                 <div className="text-center py-12 md:py-16">
                                   <Users className="h-16 w-16 md:h-20 md:w-20 mx-auto text-gray-300 mb-4" />
@@ -1483,7 +1588,7 @@ export function AdminDashboard() {
                               ) : (
                                 <div className="bg-white rounded-lg md:rounded-xl border shadow-sm overflow-hidden">
                                   <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[500px]">
+                                    <table className="w-full min-w-[400px]">
                                       <thead className="bg-gray-50 border-b">
                                         <tr>
                                           <th className="text-left p-3 md:p-4 font-medium text-gray-600 text-sm md:text-base">Email</th>
@@ -1494,12 +1599,12 @@ export function AdminDashboard() {
                                       <tbody className="divide-y">
                                         {data.newsletters.map((newsletter) => (
                                           <tr key={newsletter.id} className="hover:bg-gray-50">
-                                            <td className="p-3 md:p-4 text-sm md:text-base">{newsletter.email}</td>
+                                            <td className="p-3 md:p-4 text-sm md:text-base text-gray-800">{newsletter.email}</td>
                                             <td className="p-3 md:p-4 text-gray-500 text-sm md:text-base">
                                               {new Date(newsletter.createdAt).toLocaleString()}
                                             </td>
                                             <td className="p-3 md:p-4">
-                                              <Button variant="outline" size="sm" onClick={() => deleteRecord("newsletter", newsletter.id)} className="text-red-600 p-2 md:px-4">
+                                              <Button variant="outline" size="sm" onClick={() => deleteRecord("newsletter", newsletter.id)} className="text-red-600 hover:bg-red-50 p-2 md:px-4">
                                                 <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                                               </Button>
                                             </td>
@@ -1546,7 +1651,7 @@ export function AdminDashboard() {
                                         <p className="text-xs md:text-sm text-gray-400 mt-2">Service: {review.service}</p>
                                       )}
                                       <div className="flex justify-end mt-3 md:mt-4">
-                                        <Button variant="outline" size="sm" onClick={() => deleteRecord("review", review.id)} className="text-red-600 text-xs md:text-sm">
+                                        <Button variant="outline" size="sm" onClick={() => deleteRecord("review", review.id)} className="text-red-600 hover:bg-red-50 text-xs md:text-sm">
                                           <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                                           Delete
                                         </Button>
@@ -1571,7 +1676,12 @@ export function AdminDashboard() {
 
                               {/* Add New Service */}
                               <div className="bg-white rounded-lg md:rounded-xl border p-4 md:p-6 shadow-sm">
-                                <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Add New Service</h3>
+                                <div className="flex items-center gap-3 mb-4">
+                                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                    <Plus className="h-5 w-5 text-emerald-600" />
+                                  </div>
+                                  <h3 className="text-base md:text-lg font-semibold text-gray-800">Add New Service</h3>
+                                </div>
                                 <div className="grid gap-4">
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -1580,7 +1690,7 @@ export function AdminDashboard() {
                                         value={newService.title}
                                         onChange={(e) => setNewService({ ...newService, title: e.target.value })}
                                         placeholder="e.g., Plumbing Installation"
-                                        className="text-sm md:text-base"
+                                        className="text-sm md:text-base text-gray-900 placeholder:text-gray-400"
                                       />
                                     </div>
                                     <div>
@@ -1588,7 +1698,7 @@ export function AdminDashboard() {
                                       <select
                                         value={newService.icon}
                                         onChange={(e) => setNewService({ ...newService, icon: e.target.value })}
-                                        className="w-full h-10 px-3 border rounded-lg text-sm md:text-base"
+                                        className="w-full h-10 px-3 border rounded-lg text-sm md:text-base text-gray-900 bg-white"
                                       >
                                         <option value="Wrench">Wrench</option>
                                         <option value="Droplets">Droplets</option>
@@ -1610,7 +1720,7 @@ export function AdminDashboard() {
                                       onChange={(e) => setNewService({ ...newService, description: e.target.value })}
                                       placeholder="Describe the service..."
                                       rows={3}
-                                      className="text-sm md:text-base"
+                                      className="text-sm md:text-base text-gray-900 placeholder:text-gray-400"
                                     />
                                   </div>
                                   <div className="flex justify-end">
@@ -1630,49 +1740,49 @@ export function AdminDashboard() {
                                 </div>
                               </div>
 
-                              {/* Services List */}
-                              <div className="bg-white rounded-lg md:rounded-xl border p-4 md:p-6 shadow-sm">
-                                <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Current Services</h3>
+                              {/* Services List - Card Layout */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {services.length === 0 ? (
-                                  <div className="text-center py-8 text-gray-500">
+                                  <div className="col-span-full bg-white rounded-lg md:rounded-xl border p-8 text-center text-gray-500">
                                     <Wrench className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                                     <p>No services added yet. Add your first service above.</p>
                                   </div>
                                 ) : (
-                                  <div className="space-y-4">
-                                    {services.map((service) => (
-                                      <div key={service.id} className="border rounded-lg p-4 flex items-start justify-between gap-4">
-                                        <div className="flex-1">
-                                          <h4 className="font-medium text-gray-800">{service.title}</h4>
-                                          <p className="text-sm text-gray-500 mt-1">{service.description}</p>
-                                          <div className="flex items-center gap-2 mt-2">
-                                            <Badge variant={service.active ? "default" : "secondary"} className={service.active ? "bg-emerald-100 text-emerald-700" : ""}>
-                                              {service.active ? "Active" : "Inactive"}
-                                            </Badge>
-                                            <span className="text-xs text-gray-400">Icon: {service.icon}</span>
-                                          </div>
+                                  services.map((service) => (
+                                    <div key={service.id} className="bg-white rounded-lg md:rounded-xl border p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow">
+                                      <div className="flex items-start justify-between mb-3">
+                                        <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                          <Wrench className="h-5 w-5 text-emerald-600" />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => updateService(service.id, { ...service, active: !service.active })}
-                                            className="text-xs"
-                                          >
-                                            {service.active ? "Deactivate" : "Activate"}
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => deleteService(service.id)}
-                                            className="text-red-600 text-xs"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        </div>
+                                        <Badge 
+                                          variant={service.active ? "default" : "secondary"} 
+                                          className={service.active ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}
+                                        >
+                                          {service.active ? "Active" : "Inactive"}
+                                        </Badge>
                                       </div>
-                                    ))}
-                                  </div>
+                                      <h4 className="font-semibold text-gray-800 mb-2">{service.title}</h4>
+                                      <p className="text-sm text-gray-500 mb-3 line-clamp-2">{service.description}</p>
+                                      <div className="flex items-center gap-2 pt-3 border-t">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => updateService(service.id, { ...service, active: !service.active })}
+                                          className="flex-1 text-gray-700 border-gray-300 hover:bg-gray-100 text-xs"
+                                        >
+                                          {service.active ? "Deactivate" : "Activate"}
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => deleteService(service.id)}
+                                          className="text-red-600 hover:bg-red-50 p-2"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ))
                                 )}
                               </div>
                             </div>
@@ -1685,7 +1795,7 @@ export function AdminDashboard() {
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
                                 <div>
                                   <h2 className="text-lg md:text-2xl font-bold text-gray-800">Site Settings</h2>
-                                  <p className="text-gray-500 text-xs md:text-base">Manage your business info, images & social links</p>
+                                  <p className="text-gray-500 text-xs md:text-base">Manage your business info & social links</p>
                                 </div>
                                 {settingsSaved && (
                                   <motion.div
@@ -1716,7 +1826,7 @@ export function AdminDashboard() {
                                           value={settings.businessName}
                                           onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
                                           placeholder="Your business name"
-                                          className="text-sm md:text-base h-9 md:h-10"
+                                          className="text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                         />
                                       </div>
                                       <div>
@@ -1727,7 +1837,7 @@ export function AdminDashboard() {
                                             value={settings.phone}
                                             onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
                                             placeholder="0720 219802"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
+                                            className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>
                                       </div>
@@ -1739,7 +1849,7 @@ export function AdminDashboard() {
                                             value={settings.phone2 || ""}
                                             onChange={(e) => setSettings({ ...settings, phone2: e.target.value })}
                                             placeholder="07XX XXX XXX"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
+                                            className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>
                                       </div>
@@ -1752,7 +1862,7 @@ export function AdminDashboard() {
                                             onChange={(e) => setSettings({ ...settings, email: e.target.value })}
                                             placeholder="info@example.com"
                                             type="email"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
+                                            className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>
                                       </div>
@@ -1764,19 +1874,7 @@ export function AdminDashboard() {
                                             value={settings.businessHours}
                                             onChange={(e) => setSettings({ ...settings, businessHours: e.target.value })}
                                             placeholder="24/7 Emergency Services"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
-                                          />
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">WhatsApp Number</label>
-                                        <div className="relative">
-                                          <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                          <Input
-                                            value={settings.whatsapp || ""}
-                                            onChange={(e) => setSettings({ ...settings, whatsapp: e.target.value })}
-                                            placeholder="254720219802"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
+                                            className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>
                                       </div>
@@ -1789,7 +1887,7 @@ export function AdminDashboard() {
                                             onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                                             placeholder="Thika Rd, Nairobi, Kenya"
                                             rows={2}
-                                            className="pl-10 text-sm md:text-base"
+                                            className="pl-10 text-sm md:text-base text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>
                                       </div>
@@ -1802,7 +1900,7 @@ export function AdminDashboard() {
                                       <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                         <Globe className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
                                       </div>
-                                      <h3 className="text-base md:text-lg font-semibold text-gray-800">Social Media</h3>
+                                      <h3 className="text-base md:text-lg font-semibold text-gray-800">Social Media Links</h3>
                                     </div>
                                     <div className="grid gap-3 md:gap-4 md:grid-cols-2">
                                       <div>
@@ -1813,19 +1911,7 @@ export function AdminDashboard() {
                                             value={settings.facebook || ""}
                                             onChange={(e) => setSettings({ ...settings, facebook: e.target.value })}
                                             placeholder="https://facebook.com/yourpage"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
-                                          />
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Twitter/X URL</label>
-                                        <div className="relative">
-                                          <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                          <Input
-                                            value={settings.twitter || ""}
-                                            onChange={(e) => setSettings({ ...settings, twitter: e.target.value })}
-                                            placeholder="https://twitter.com/yourhandle"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
+                                            className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>
                                       </div>
@@ -1837,194 +1923,22 @@ export function AdminDashboard() {
                                             value={settings.instagram || ""}
                                             onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
                                             placeholder="https://instagram.com/yourhandle"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
+                                            className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>
                                       </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Hero Section */}
-                                  <div className="bg-white rounded-lg md:rounded-xl border p-3 md:p-5 shadow-sm">
-                                    <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-5">
-                                      <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                        <Type className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
-                                      </div>
-                                      <h3 className="text-base md:text-lg font-semibold text-gray-800">Hero Section (Homepage Top)</h3>
-                                    </div>
-                                    <div className="grid gap-3 md:gap-4">
                                       <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Hero Title</label>
-                                        <Input
-                                          value={settings.heroTitle}
-                                          onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
-                                          placeholder="Professional Plumbing Services"
-                                          className="text-sm md:text-base h-9 md:h-10"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Hero Subtitle</label>
-                                        <Textarea
-                                          value={settings.heroSubtitle}
-                                          onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
-                                          placeholder="Brief description of your services"
-                                          rows={2}
-                                          className="text-sm md:text-base"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Hero Background Image URL</label>
+                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">WhatsApp Number</label>
                                         <div className="relative">
-                                          <Image className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                          <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                           <Input
-                                            value={settings.heroImage || ""}
-                                            onChange={(e) => setSettings({ ...settings, heroImage: e.target.value })}
-                                            placeholder="https://example.com/hero-image.jpg"
-                                            className="pl-10 pr-24 text-sm md:text-base h-9 md:h-10"
-                                          />
-                                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                            <input
-                                              type="file"
-                                              accept="image/*"
-                                              onChange={async (e) => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
-                                                setUploadingImage("heroImage");
-                                                try {
-                                                  const formData = new FormData();
-                                                  formData.append("file", file);
-                                                  const res = await fetch("/api/upload", { method: "POST", body: formData });
-                                                  const data = await res.json();
-                                                  if (data.success) {
-                                                    setSettings({ ...settings, heroImage: data.url });
-                                                  }
-                                                } catch (err) {
-                                                  console.error("Upload failed:", err);
-                                                } finally {
-                                                  setUploadingImage(null);
-                                                }
-                                              }}
-                                              className="hidden"
-                                              id="hero-image-upload"
-                                            />
-                                            <label
-                                              htmlFor="hero-image-upload"
-                                              className={`cursor-pointer inline-flex items-center gap-1 px-2 py-1 text-xs bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors ${uploadingImage === "heroImage" ? "opacity-50 pointer-events-none" : ""}`}
-                                            >
-                                              {uploadingImage === "heroImage" ? (
-                                                <Loader2 className="h-3 w-3 animate-spin" />
-                                              ) : (
-                                                <Upload className="h-3 w-3" />
-                                              )}
-                                              <span className="hidden sm:inline">Upload</span>
-                                            </label>
-                                          </div>
-                                        </div>
-                                        <p className="text-xs text-gray-400 mt-1">Enter a URL or upload an image from your device</p>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* About Section */}
-                                  <div className="bg-white rounded-lg md:rounded-xl border p-3 md:p-5 shadow-sm">
-                                    <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-5">
-                                      <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                        <FileText className="h-4 w-4 md:h-5 md:w-5 text-orange-600" />
-                                      </div>
-                                      <h3 className="text-base md:text-lg font-semibold text-gray-800">About Section</h3>
-                                    </div>
-                                    <div className="grid gap-3 md:gap-4">
-                                      <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">About Title</label>
-                                        <Input
-                                          value={settings.aboutTitle}
-                                          onChange={(e) => setSettings({ ...settings, aboutTitle: e.target.value })}
-                                          placeholder="About Us"
-                                          className="text-sm md:text-base h-9 md:h-10"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">About Content</label>
-                                        <Textarea
-                                          value={settings.aboutContent}
-                                          onChange={(e) => setSettings({ ...settings, aboutContent: e.target.value })}
-                                          placeholder="Tell your customers about your business..."
-                                          rows={4}
-                                          className="text-sm md:text-base"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">About Image URL</label>
-                                        <div className="relative">
-                                          <Image className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                          <Input
-                                            value={settings.aboutImage || ""}
-                                            onChange={(e) => setSettings({ ...settings, aboutImage: e.target.value })}
-                                            placeholder="https://example.com/about-image.jpg"
-                                            className="pl-10 text-sm md:text-base h-9 md:h-10"
+                                            value={settings.whatsapp || ""}
+                                            onChange={(e) => setSettings({ ...settings, whatsapp: e.target.value })}
+                                            placeholder="254720219802"
+                                            className="pl-10 text-sm md:text-base h-9 md:h-10 text-gray-900 placeholder:text-gray-400"
                                           />
                                         </div>
                                       </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Logo */}
-                                  <div className="bg-white rounded-lg md:rounded-xl border p-3 md:p-5 shadow-sm">
-                                    <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-5">
-                                      <div className="w-8 h-8 md:w-10 md:h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-                                        <Image className="h-4 w-4 md:h-5 md:w-5 text-pink-600" />
-                                      </div>
-                                      <h3 className="text-base md:text-lg font-semibold text-gray-800">Logo</h3>
-                                    </div>
-                                    <div>
-                                      <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1 md:mb-2">Logo Image URL</label>
-                                      <div className="relative">
-                                        <Image className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <Input
-                                          value={settings.logoUrl || ""}
-                                          onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
-                                          placeholder="https://example.com/logo.png"
-                                          className="pl-10 pr-24 text-sm md:text-base h-9 md:h-10"
-                                        />
-                                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                          <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={async (e) => {
-                                              const file = e.target.files?.[0];
-                                              if (!file) return;
-                                              setUploadingImage("logoUrl");
-                                              try {
-                                                const formData = new FormData();
-                                                formData.append("file", file);
-                                                const res = await fetch("/api/upload", { method: "POST", body: formData });
-                                                const data = await res.json();
-                                                if (data.success) {
-                                                  setSettings({ ...settings, logoUrl: data.url });
-                                                }
-                                              } catch (err) {
-                                                console.error("Upload failed:", err);
-                                              } finally {
-                                                setUploadingImage(null);
-                                              }
-                                            }}
-                                            className="hidden"
-                                            id="logo-image-upload"
-                                          />
-                                          <label
-                                            htmlFor="logo-image-upload"
-                                            className={`cursor-pointer inline-flex items-center gap-1 px-2 py-1 text-xs bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors ${uploadingImage === "logoUrl" ? "opacity-50 pointer-events-none" : ""}`}
-                                          >
-                                            {uploadingImage === "logoUrl" ? (
-                                              <Loader2 className="h-3 w-3 animate-spin" />
-                                            ) : (
-                                              <Upload className="h-3 w-3" />
-                                            )}
-                                            <span className="hidden sm:inline">Upload</span>
-                                          </label>
-                                        </div>
-                                      </div>
-                                      <p className="text-xs text-gray-400 mt-1">Recommended: PNG with transparent background, 200x60px. Upload or enter a URL.</p>
                                     </div>
                                   </div>
 
@@ -2067,6 +1981,82 @@ export function AdminDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Bulk Email Modal */}
+      <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-800">Send Bulk Email</DialogTitle>
+            <DialogDescription className="text-gray-500">
+              Send an email to all {data?.newsletters.length || 0} subscribers
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+              <Input
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="Email subject..."
+                className="text-gray-900 placeholder:text-gray-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+              <Textarea
+                value={emailContent}
+                onChange={(e) => setEmailContent(e.target.value)}
+                placeholder="Write your email content here..."
+                rows={6}
+                className="text-gray-900 placeholder:text-gray-400"
+              />
+            </div>
+            
+            {bulkEmailResult && (
+              <div className={`p-3 rounded-lg ${bulkEmailResult.success > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                {bulkEmailResult.success > 0 ? (
+                  <p>✅ Successfully sent to {bulkEmailResult.success} subscribers!</p>
+                ) : (
+                  <p>❌ Failed to send emails. Please try again.</p>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEmailModal(false);
+                setEmailSubject("");
+                setEmailContent("");
+                setBulkEmailResult(null);
+              }}
+              className="text-gray-700 border-gray-300"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={sendBulkEmail}
+              disabled={!emailSubject.trim() || !emailContent.trim() || sendingBulkEmail}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+            >
+              {sendingBulkEmail ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Email
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

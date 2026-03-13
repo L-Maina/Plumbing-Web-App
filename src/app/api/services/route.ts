@@ -5,7 +5,6 @@ import { db } from "@/lib/db";
 export async function GET() {
   try {
     const services = await db.service.findMany({
-      where: { active: true },
       orderBy: { order: "asc" },
     });
     return NextResponse.json(services);
