@@ -1,5 +1,5 @@
 // Local development schema (SQLite)
-// Use this for local development only
+// For production, use schema.prisma (PostgreSQL)
 
 generator client {
   provider = "prisma-client-js"
@@ -46,15 +46,15 @@ model ChatMessage {
 }
 
 model ChatSession {
-  id              String   @id @default(cuid())
-  customerName    String?
-  handoffRequested Boolean @default(false)
-  needsHuman      Boolean  @default(false)
-  takenOver       Boolean  @default(false)
-  finished        Boolean  @default(false)
-  messages        ChatMessage[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String   @id @default(cuid())
+  customerName     String?
+  handoffRequested Boolean  @default(false)
+  needsHuman       Boolean  @default(false)
+  takenOver        Boolean  @default(false)
+  finished         Boolean  @default(false)
+  messages         ChatMessage[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Contact {
@@ -77,15 +77,15 @@ model Newsletter {
 }
 
 model BlogPost {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  excerpt     String
-  content     String
-  image       String?
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  excerpt   String
+  content   String
+  image     String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SiteSettings {
