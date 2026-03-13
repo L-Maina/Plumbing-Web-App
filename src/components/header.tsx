@@ -13,7 +13,11 @@ import {
   MessageCircle,
   ChevronDown,
   Facebook,
-  Instagram
+  Instagram,
+  Home,
+  Users,
+  Star,
+  Mail
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -31,11 +35,11 @@ interface SiteSettings {
 }
 
 const navItems = [
-  { name: "Home", href: "#home" },
-  { name: "About", href: "#about" },
-  { name: "Services", href: "#services" },
-  { name: "Reviews", href: "#reviews" },
-  { name: "Contact", href: "#contact" },
+  { name: "Home", href: "#home", icon: Home },
+  { name: "About", href: "#about", icon: Users },
+  { name: "Services", href: "#services", icon: Wrench },
+  { name: "Reviews", href: "#reviews", icon: Star },
+  { name: "Contact", href: "#contact", icon: Mail },
 ];
 
 export function Header() {
@@ -182,7 +186,7 @@ export function Header() {
           </a>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-6">
             {navItems.map((item) => (
               <a
                 key={item.name}
@@ -191,10 +195,11 @@ export function Header() {
                   e.preventDefault();
                   scrollToSection(item.href);
                 }}
-                className={`font-medium transition-colors hover:text-emerald-500 ${
+                className={`flex items-center gap-2 font-medium transition-colors hover:text-emerald-500 ${
                   isScrolled ? "text-gray-700" : "text-white"
                 }`}
               >
+                <item.icon className="h-4 w-4" />
                 {item.name}
               </a>
             ))}
@@ -241,7 +246,7 @@ export function Header() {
                   </div>
                 </div>
 
-                <nav className="flex flex-col gap-4">
+                <nav className="flex flex-col gap-2">
                   {navItems.map((item) => (
                     <a
                       key={item.name}
@@ -250,8 +255,9 @@ export function Header() {
                         e.preventDefault();
                         scrollToSection(item.href);
                       }}
-                      className="text-lg font-medium text-gray-700 hover:text-emerald-500 transition-colors py-2"
+                      className="flex items-center gap-3 text-lg font-medium text-gray-700 hover:text-emerald-500 transition-colors py-3 px-2 rounded-lg hover:bg-emerald-50"
                     >
+                      <item.icon className="h-5 w-5" />
                       {item.name}
                     </a>
                   ))}
