@@ -1,0 +1,141 @@
+// Prisma Schema for Climate Tech Plumbing
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl  = env("DIRECT_DATABASE_URL")
+}
+
+model Booking {
+  id                    String   @id @default(cuid())
+  name                  String
+  email                 String
+  phone                 String
+  service               String
+  otherServiceDescription String?
+  date                  String
+  time                  String
+  address               String
+  notes                 String?
+  status                String   @default("pending")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Review {
+  id                    String   @id @default(cuid())
+  name                  String
+  rating                Int
+  comment               String
+  service               String?
+  otherServiceDescription String?
+  approved              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender    String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model ChatSession {
+  id              String   @id @default(cuid())
+  customerName    String?
+  handoffRequested Boolean @default(false)
+  needsHuman      Boolean  @default(false)
+  takenOver       Boolean  @default(false)
+  finished        Boolean  @default(false)
+  messages        ChatMessage[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String
+  image       String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSettings {
+  id            String   @id @default(cuid())
+  businessName  String   @default("Climate Tech Plumbing & Renovators")
+  phone         String   @default("0720 219802")
+  phone2        String?
+  email         String   @default("info@climatetechplumbing.co.ke")
+  address       String   @default("Thika Rd, Nairobi, Kenya")
+  businessHours String   @default("24/7 Emergency Services Available")
+  is24_7        Boolean  @default(true)
+  mondayOpen    String   @default("08:00")
+  mondayClose   String   @default("18:00")
+  tuesdayOpen   String   @default("08:00")
+  tuesdayClose  String   @default("18:00")
+  wednesdayOpen String   @default("08:00")
+  wednesdayClose String  @default("18:00")
+  thursdayOpen  String   @default("08:00")
+  thursdayClose String   @default("18:00")
+  fridayOpen    String   @default("08:00")
+  fridayClose   String   @default("18:00")
+  saturdayOpen  String   @default("08:00")
+  saturdayClose String   @default("14:00")
+  sundayOpen    String   @default("00:00")
+  sundayClose   String   @default("00:00")
+  heroTitle     String   @default("Professional Plumbing & Borehole Services")
+  heroSubtitle  String   @default("Expert solutions for all your plumbing, borehole drilling, and water system needs")
+  heroImage     String?
+  aboutTitle    String   @default("About Climate Tech Plumbing")
+  aboutContent  String   @default("We are a professional plumbing company dedicated to providing high-quality services.")
+  aboutImage    String?
+  logoUrl       String?
+  facebook      String?
+  twitter       String?
+  instagram     String?
+  whatsapp      String?  @default("254720219802")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String   @default("Wrench")
+  image       String?
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
